@@ -1,0 +1,50 @@
+services:
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "7999:80"
+    volumes:
+      - ./phpmyadmin/config.inc.php:/etc/phpmyadmin/config.inc.php:ro
+      - ./phpmyadmin/sessions:/var/lib/phpmyadmin/sessions
+      - ./phpmyadmin/tmp:/tmp
+    environment:
+      PMA_ABSOLUTE_URI : http://localhost:7999/      
+      UPLOAD_LIMIT: 100M
+      MEMORY_LIMIT: 512M
+      # Add PHP-FPM optimizations
+      PHP_UPLOAD_MAX_FILESIZE: 100M
+      PHP_POST_MAX_SIZE: 100M
+      PHP_MAX_EXECUTION_TIME: 300
+      PMA_ALLOW_NO_PASSWORD: "yes"
+      PHP_MAX_INPUT_VARS: 5000
+    # Add resource limits to prevent OOM
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    networks:
+      - pma_default
+      - fleetbase_default
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+    # networks:
+    #   - pma-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-k", "https://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  pma_default:
+    driver: bridge
+  fleetbase_default:
+    external: true
+
+
